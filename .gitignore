@@ -113,36 +113,6 @@ cython_debug/
 # VS Code
 .vscode/
 
-# FloorMind Specific
-# Large model files
-outputs/models/*/
-!outputs/models/.gitkeep
-
-# Dataset files
-data/raw/
-data/processed/images/
-!data/processed/.gitkeep
-!data/.gitkeep
-
-# Training outputs
-outputs/logs/
-outputs/metrics/
-outputs/checkpoints/
-*.pth
-*.safetensors
-
-# Generated images
-*.png
-*.jpg
-*.jpeg
-!frontend/assets/
-!docs/images/
-
-# Temporary files
-temp/
-tmp/
-.tmp/
-
 # OS generated files
 .DS_Store
 .DS_Store?
@@ -152,38 +122,92 @@ tmp/
 ehthumbs.db
 Thumbs.db
 
-# Hugging Face cache
+# ============================================
+# FLOORMIND SPECIFIC
+# ============================================
+
+# Dataset files (large)
+data/raw/
+data/cubicasa5k/
+data/processed/images/
+data/processed/numpy_arrays/
+data/processed/*.npy
+!data/processed/.gitkeep
+!data/.gitkeep
+
+# Trained models (large)
+models/trained_model/*.safetensors
+models/trained_model/*.bin
+models/trained_model/*.pth
+models/checkpoints/
+models/trained/
+!models/.gitkeep
+!models/trained_model/config.json
+!models/trained_model/model_index.json
+!models/trained_model/training_config.json
+
+# Training outputs
+outputs/models/
+outputs/logs/
+outputs/metrics/
+outputs/checkpoints/
+outputs/generated/*.png
+outputs/generated/*.jpg
+!outputs/.gitkeep
+
+# Generated floor plans
+generated_floor_plans/*.png
+generated_floor_plans/*.jpg
+!generated_floor_plans/.gitkeep
+
+# Model files
+*.pkl
+*.pth
+*.safetensors
+*.bin
+*.h5
+*.hdf5
+
+# Temporary files
+temp/
+tmp/
+.tmp/
+backup_flat_structure/
+legacy/
+
+# Cache directories
 .cache/
 transformers_cache/
 diffusers_cache/
 
-# Weights & Biases
+# ML experiment tracking
 wandb/
-
-# MLflow
 mlruns/
-
-# TensorBoard
 runs/
 logs/
+*.log
 
-# Large files
-*.bin
-*.h5
-*.hdf5
+# Node.js / Frontend
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+frontend/build/
+frontend/.env.local
+frontend/.env.production
+
+# Python cache
+src/**/__pycache__/
+backend/**/__pycache__/
+*.pyc
 
 # Backup files
 *.bak
 *.backup
 *~
 
-# Configuration files with secrets
+# Configuration with secrets
 config/secrets.json
+config/api_keys.json
 .env.local
 .env.production
-
-# Node.js (if using any JS tools)
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*

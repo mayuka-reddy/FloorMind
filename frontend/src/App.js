@@ -8,6 +8,7 @@ import GeneratorPage from './pages/GeneratorPage';
 import ModelsPage from './pages/ModelsPage';
 import MetricsPage from './pages/MetricsPage';
 import AboutPage from './pages/AboutPage';
+import DevelopersPage from './pages/DevelopersPage';
 
 function App() {
   return (
@@ -21,10 +22,11 @@ function App() {
             <Route path="/models" element={<ModelsPage />} />
             <Route path="/metrics" element={<MetricsPage />} />
             <Route path="/about" element={<AboutPage />} />
+            <Route path="/developers" element={<DevelopersPage />} />
           </Routes>
         </main>
         <Footer />
-        <Toaster 
+        <Toaster
           position="top-right"
           toastOptions={{
             duration: 4000,

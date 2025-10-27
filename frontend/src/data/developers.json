@@ -1,0 +1,130 @@
+{
+  "team": {
+    "project_name": "FloorMind",
+    "tagline": "AI-Powered Floor Plan Generation",
+    "description": "An advanced machine learning system that generates architectural floor plans from natural language descriptions using fine-tuned diffusion models.",
+    "version": "1.0.0",
+    "repository": "https://github.com/yourusername/FloorMind",
+    "license": "MIT"
+  },
+  "developers": [
+    {
+      "id": 1,
+      "name": "Your Name",
+      "role": "Lead ML Engineer",
+      "avatar": "https://ui-avatars.com/api/?name=Your+Name&background=0ea5e9&color=fff&size=200",
+      "bio": "Specialized in diffusion models and architectural AI",
+      "contributions": [
+        "Model architecture design",
+        "Training pipeline optimization",
+        "Constraint-aware loss functions"
+      ],
+      "links": {
+        "github": "https://github.com/yourusername",
+        "linkedin": "https://linkedin.com/in/yourprofile",
+        "email": "your.email@example.com"
+      }
+    },
+    {
+      "id": 2,
+      "name": "Team Member 2",
+      "role": "Full Stack Developer",
+      "avatar": "https://ui-avatars.com/api/?name=Team+Member+2&background=d946ef&color=fff&size=200",
+      "bio": "Frontend and backend integration specialist",
+      "contributions": [
+        "React frontend development",
+        "Flask API implementation",
+        "UI/UX design"
+      ],
+      "links": {
+        "github": "https://github.com/teammember2",
+        "linkedin": "https://linkedin.com/in/teammember2",
+        "email": "member2@example.com"
+      }
+    },
+    {
+      "id": 3,
+      "name": "Team Member 3",
+      "role": "Data Engineer",
+      "avatar": "https://ui-avatars.com/api/?name=Team+Member+3&background=10b981&color=fff&size=200",
+      "bio": "Dataset processing and model evaluation expert",
+      "contributions": [
+        "CubiCasa5K dataset processing",
+        "Metrics implementation",
+        "Performance benchmarking"
+      ],
+      "links": {
+        "github": "https://github.com/teammember3",
+        "linkedin": "https://linkedin.com/in/teammember3",
+        "email": "member3@example.com"
+      }
+    }
+  ],
+  "acknowledgments": [
+    {
+      "name": "Stability AI",
+      "contribution": "Stable Diffusion base model",
+      "link": "https://stability.ai/"
+    },
+    {
+      "name": "Hugging Face",
+      "contribution": "Diffusers library and model hosting",
+      "link": "https://huggingface.co/"
+    },
+    {
+      "name": "CubiCasa",
+      "contribution": "CubiCasa5K dataset",
+      "link": "https://github.com/CubiCasa/CubiCasa5k"
+    },
+    {
+      "name": "PyTorch Team",
+      "contribution": "Deep learning framework",
+      "link": "https://pytorch.org/"
+    }
+  ],
+  "technologies": [
+    {
+      "category": "Machine Learning",
+      "items": [
+        "PyTorch 2.0+",
+        "Diffusers 0.35.2",
+        "Transformers 4.57.1",
+        "Accelerate 1.10.1"
+      ]
+    },
+    {
+      "category": "Frontend",
+      "items": [
+        "React 18.2",
+        "TailwindCSS 3.3",
+        "Framer Motion 10.12",
+        "Lucide React"
+      ]
+    },
+    {
+      "category": "Backend",
+      "items": [
+        "Flask 2.3",
+        "Flask-CORS",
+        "Pillow 10.0",
+        "NumPy 1.24"
+      ]
+    },
+    {
+      "category": "Infrastructure",
+      "items": [
+        "Google Colab A100",
+        "CUDA 11.8+",
+        "Git & GitHub",
+        "Docker (optional)"
+      ]
+    }
+  ],
+  "statistics": {
+    "lines_of_code": "15000+",
+    "training_hours": "120+",
+    "dataset_size": "5000+ floor plans",
+    "model_parameters": "860M",
+    "accuracy": "84.5%"
+  }
+}

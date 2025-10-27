@@ -1,0 +1,51 @@
+{
+  "dataset_info": {
+    "total_samples": 5000,
+    "image_files": 5050,
+    "metadata_columns": [
+      "id",
+      "original_id",
+      "category",
+      "dataset",
+      "image_path",
+      "original_path",
+      "description",
+      "width",
+      "height",
+      "original_width",
+      "original_height",
+      "aspect_ratio",
+      "file_size_kb",
+      "room_count",
+      "room_types",
+      "has_balcony",
+      "has_garage",
+      "floors",
+      "architectural_style",
+      "area_estimate",
+      "split"
+    ],
+    "has_descriptions": true,
+    "has_room_info": true,
+    "has_categories": true
+  },
+  "data_quality": {
+    "metadata_image_match": true,
+    "all_images_512x512": true,
+    "consistent_format": "PNG"
+  },
+  "training_readiness": {
+    "pytorch_available": true,
+    "device": "mps",
+    "gpu_available": true,
+    "dataset_ready": true,
+    "recommended_batch_size": 4
+  },
+  "recommendations": {
+    "training_epochs": 10,
+    "learning_rate": 1e-05,
+    "batch_size": 4,
+    "save_steps": 250
+  },
+  "generation_date": "2025-10-25T16:45:05.804332"
+}

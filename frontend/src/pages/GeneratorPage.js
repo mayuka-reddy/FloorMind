@@ -1,25 +1,96 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Zap, Settings, Download, RefreshCw, Sparkles, Clock, Image as ImageIcon } from 'lucide-react';
+import { Zap, Settings, Download, RefreshCw, Sparkles, Clock, Image as ImageIcon, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import floorMindAPI from '../services/api';
 
 const GeneratorPage = () => {
   const [prompt, setPrompt] = useState('');
-  const [modelType, setModelType] = useState('constraint_aware');
+  const [modelType, setModelType] = useState('baseline'); // Use your trained baseline model
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState(null);
   const [generationMetrics, setGenerationMetrics] = useState(null);
-  const [include3D, setInclude3D] = useState(false);
   const [style, setStyle] = useState('modern');
+  const [apiStatus, setApiStatus] = useState('checking'); // checking, online, offline, loading_model
+  const [modelInfo, setModelInfo] = useState(null);
+  const [presets, setPresets] = useState(null);
+  const [modelLoaded, setModelLoaded] = useState(false);
 
-  const samplePrompts = [
+  // Initialize API and load presets
+  useEffect(() => {
+    const initializeAPI = async () => {
+      try {
+        // Check API health
+        await floorMindAPI.checkHealth();
+        setApiStatus('online');
+        toast.success('FloorMind AI is ready!');
+
+        // Load model info
+        try {
+          const info = await floorMindAPI.getModelInfo();
+          setModelInfo(info.model_info);
+          setModelLoaded(info.model_info?.is_loaded || false);
+        } catch (error) {
+          console.warn('Could not load model info:', error);
+        }
+
+        // Load presets
+        try {
+          const presetsData = await floorMindAPI.getPresets();
+          setPresets(presetsData.presets);
+        } catch (error) {
+          console.warn('Could not load presets:', error);
+        }
+
+      } catch (error) {
+        setApiStatus('offline');
+        toast.error('FloorMind AI is offline. Please start the backend server.');
+        console.error('API initialization failed:', error);
+      }
+    };
+
+    initializeAPI();
+  }, []);
+
+  // Get sample prompts from presets or use defaults
+  const samplePrompts = presets?.residential || [
     "3-bedroom apartment with open kitchen and living room",
-    "Small studio with bathroom and kitchenette",
+    "Small studio with bathroom and kitchenette", 
     "2-story house with 4 bedrooms and 2 bathrooms",
     "Modern loft with master bedroom and walk-in closet",
     "Family home with garage and dining room",
     "Office space with conference room and reception area"
   ];
+
+  const handleLoadModel = async () => {
+    if (apiStatus !== 'online') {
+      toast.error('Backend server is not available');
+      return;
+    }
+
+    setApiStatus('loading_model');
+    
+    try {
+      toast.loading('Loading FloorMind AI model...', { duration: 2000 });
+      
+      const result = await floorMindAPI.loadModel();
+      
+      if (result.status === 'success') {
+        setModelLoaded(true);
+        setModelInfo(result.model_info);
+        toast.success('🎉 FloorMind AI model loaded successfully!');
+      } else {
+        throw new Error(result.error || 'Failed to load model');
+      }
+      
+    } catch (error) {
+      console.error('Model loading error:', error);
+      toast.error(`Failed to load model: ${error.message}`);
+      setModelLoaded(false);
+    } finally {
+      setApiStatus('online');
+    }
+  };
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -27,29 +98,51 @@ const GeneratorPage = () => {
       return;
     }
 
+    if (apiStatus !== 'online') {
+      toast.error('FloorMind AI is not available. Please check the backend server.');
+      return;
+    }
+
+    if (!modelLoaded) {
+      toast.error('Please load the FloorMind AI model first.');
+      return;
+    }
+
     setIsGenerating(true);
+    const startTime = Date.now();
     
     try {
-      // Simulate API call - replace with actual API integration
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // Mock generated result
-      const mockResult = {
-        image_path: '/api/placeholder/512/512',
-        generation_time: 2.3,
-        metadata: {
-          clip_score: 0.78,
-          adjacency_score: 0.71,
-          accuracy: 86.2
-        }
-      };
-      
-      setGeneratedImage(mockResult.image_path);
-      setGenerationMetrics(mockResult);
-      toast.success('Floor plan generated successfully!');
+      // Call your trained FloorMind model
+      const result = await floorMindAPI.generateFloorPlan({
+        description: prompt,
+        model: modelType,
+        style: style,
+        width: 512,
+        height: 512,
+        steps: 20,
+        guidance: 7.5,
+        save: true
+      });
+
+      if (result.success) {
+        setGeneratedImage(result.image);
+        setGenerationMetrics({
+          generation_time: (Date.now() - startTime) / 1000,
+          metadata: result.metadata
+        });
+        
+        toast.success('🎉 Floor plan generated successfully!');
+      } else {
+        throw new Error('Generation failed');
+      }
       
     } catch (error) {
-      toast.error('Generation failed. Please try again.');
+      console.error('Generation error:', error);
+      toast.error(`Generation failed: ${error.message}`);
+      
+      // Reset states on error
+      setGeneratedImage(null);
+      setGenerationMetrics(null);
     } finally {
       setIsGenerating(false);
     }
@@ -59,10 +152,18 @@ const GeneratorPage = () => {
     setPrompt(samplePrompt);
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (generatedImage) {
-      toast.success('Download started!');
-      // Implement actual download logic
+      try {
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+        const filename = `floor_plan_${timestamp}.png`;
+        
+        await floorMindAPI.downloadImage(generatedImage, filename);
+        toast.success('🎉 Floor plan downloaded successfully!');
+      } catch (error) {
+        console.error('Download error:', error);
+        toast.error('Download failed. Please try again.');
+      }
     }
   };
 
@@ -79,8 +180,43 @@ const GeneratorPage = () => {
             <span className="gradient-text">AI Floor Plan</span> Generator
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Transform your ideas into detailed architectural floor plans using advanced AI models
+            Transform your ideas into detailed architectural floor plans using your trained AI model
           </p>
+          
+          {/* API Status Indicator */}
+          <div className="mt-6 flex justify-center">
+            <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${
+              (apiStatus === 'online' && modelLoaded)
+                ? 'bg-green-100 text-green-800' 
+                : apiStatus === 'offline'
+                ? 'bg-red-100 text-red-800'
+                : 'bg-yellow-100 text-yellow-800'
+            }`}>
+              <div className={`w-2 h-2 rounded-full mr-2 ${
+                (apiStatus === 'online' && modelLoaded)
+                  ? 'bg-green-500' 
+                  : apiStatus === 'offline'
+                  ? 'bg-red-500'
+                  : 'bg-yellow-500 animate-pulse'
+              }`} />
+              {(apiStatus === 'online' && modelLoaded) && 'FloorMind AI Ready'}
+              {(apiStatus === 'online' && !modelLoaded) && 'Model Not Loaded'}
+              {apiStatus === 'offline' && 'FloorMind AI Offline'}
+              {apiStatus === 'checking' && 'Connecting to FloorMind AI...'}
+              {apiStatus === 'loading_model' && 'Loading AI Model...'}
+            </div>
+            
+            {/* Model Load Button */}
+            {apiStatus === 'online' && !modelLoaded && (
+              <button
+                onClick={handleLoadModel}
+                className="ml-4 inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-full text-sm font-medium hover:bg-primary-700 transition-colors"
+              >
+                <Zap className="w-4 h-4 mr-2" />
+                Load AI Model
+              </button>
+            )}
+          </div>
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -134,27 +270,6 @@ const GeneratorPage = () => {
                   <input
                     type="radio"
                     name="model"
-                    value="constraint_aware"
-                    checked={modelType === 'constraint_aware'}
-                    onChange={(e) => setModelType(e.target.value)}
-                    className="text-primary-600 focus:ring-primary-500"
-                    disabled={isGenerating}
-                  />
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-900">Constraint-Aware Model</div>
-                    <div className="text-sm text-gray-600">
-                      Advanced model with spatial consistency (Recommended)
-                    </div>
-                  </div>
-                  <div className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                    84.5% Accuracy
-                  </div>
-                </label>
-                
-                <label className="flex items-center space-x-3 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="model"
                     value="baseline"
                     checked={modelType === 'baseline'}
                     onChange={(e) => setModelType(e.target.value)}
@@ -162,13 +277,46 @@ const GeneratorPage = () => {
                     disabled={isGenerating}
                   />
                   <div className="flex-1">
-                    <div className="font-medium text-gray-900">Baseline Model</div>
-                    <div className="text-sm text-gray-600">
-                      Standard Stable Diffusion fine-tuned model
+                    <div className="font-medium text-gray-900">
+                      FloorMind Baseline Model
+                      {apiStatus === 'online' && (
+                        <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                          ✓ Ready
+                        </span>
+                      )}
                     </div>
+                    <div className="text-sm text-gray-600">
+                      Your trained Stable Diffusion model (Recommended)
+                    </div>
+                    {modelInfo && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        Resolution: {modelInfo.resolution || '512x512'} • Device: {modelInfo.device || 'Auto'}
+                      </div>
+                    )}
                   </div>
                   <div className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                    71.3% Accuracy
+                    71.7% Accuracy
+                  </div>
+                </label>
+                
+                <label className="flex items-center space-x-3 cursor-pointer opacity-50">
+                  <input
+                    type="radio"
+                    name="model"
+                    value="constraint_aware"
+                    checked={modelType === 'constraint_aware'}
+                    onChange={(e) => setModelType(e.target.value)}
+                    className="text-primary-600 focus:ring-primary-500"
+                    disabled={true}
+                  />
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900">Constraint-Aware Model</div>
+                    <div className="text-sm text-gray-600">
+                      Advanced model with spatial consistency (Coming Soon)
+                    </div>
+                  </div>
+                  <div className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                    In Development
                   </div>
                 </label>
               </div>
@@ -209,7 +357,7 @@ const GeneratorPage = () => {
             {/* Generate Button */}
             <motion.button
               onClick={handleGenerate}
-              disabled={isGenerating || !prompt.trim()}
+              disabled={isGenerating || !prompt.trim() || !modelLoaded || apiStatus !== 'online'}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className="w-full bg-gradient-to-r from-primary-600 to-secondary-600 text-white font-semibold py-4 px-6 rounded-xl hover:from-primary-700 hover:to-secondary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl disabled:hover:scale-100"
@@ -270,9 +418,9 @@ const GeneratorPage = () => {
                       animate={{ opacity: [1, 0.5, 1] }}
                       transition={{ duration: 2, repeat: Infinity }}
                     >
-                      Generating your floor plan...
+                      Your FloorMind AI is generating...
                     </motion.p>
-                    <p className="text-sm text-gray-500 mt-2">AI is analyzing spatial relationships</p>
+                    <p className="text-sm text-gray-500 mt-2">Using your trained Stable Diffusion model</p>
                     
                     {/* Progress Animation */}
                     <div className="mt-4 w-48 mx-auto">
@@ -281,7 +429,7 @@ const GeneratorPage = () => {
                           className="bg-gradient-to-r from-primary-500 to-secondary-500 h-2 rounded-full"
                           initial={{ width: "0%" }}
                           animate={{ width: "100%" }}
-                          transition={{ duration: 3, ease: "easeInOut" }}
+                          transition={{ duration: 20, ease: "easeInOut" }}
                         />
                       </div>
                     </div>
@@ -290,17 +438,27 @@ const GeneratorPage = () => {
                   <motion.div 
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="w-full h-full bg-gradient-to-br from-primary-50 to-secondary-50 rounded-lg flex items-center justify-center relative"
+                    className="w-full h-full rounded-lg overflow-hidden relative"
                   >
-                    <div className="text-center text-gray-600">
-                      <motion.div
-                        animate={{ y: [-5, 5, -5] }}
-                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                      >
+                    {/* Display the actual generated image */}
+                    <img 
+                      src={generatedImage} 
+                      alt="Generated Floor Plan"
+                      className="w-full h-full object-contain bg-white"
+                      onError={(e) => {
+                        console.error('Image load error:', e);
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                    
+                    {/* Fallback display if image fails to load */}
+                    <div className="w-full h-full bg-gradient-to-br from-primary-50 to-secondary-50 rounded-lg flex items-center justify-center absolute top-0 left-0" style={{display: 'none'}}>
+                      <div className="text-center text-gray-600">
                         <ImageIcon className="w-20 h-20 mx-auto mb-4 text-primary-500" />
-                      </motion.div>
-                      <p className="font-semibold text-lg">Generated Floor Plan</p>
-                      <p className="text-sm text-primary-600 mt-1">Ready for download</p>
+                        <p className="font-semibold text-lg">Floor Plan Generated</p>
+                        <p className="text-sm text-primary-600 mt-1">Image ready for download</p>
+                      </div>
                     </div>
                     
                     {/* Success Animation */}
@@ -308,7 +466,7 @@ const GeneratorPage = () => {
                       initial={{ scale: 0 }}
                       animate={{ scale: [0, 1.2, 1] }}
                       transition={{ delay: 0.5, duration: 0.5 }}
-                      className="absolute top-4 right-4 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center"
+                      className="absolute top-4 right-4 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shadow-lg"
                     >
                       <span className="text-white text-sm">✓</span>
                     </motion.div>

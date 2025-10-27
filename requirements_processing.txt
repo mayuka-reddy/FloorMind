@@ -1,0 +1,11 @@
+# FloorMind Dataset Processing Requirements
+pandas>=1.5.0
+numpy>=1.21.0
+matplotlib>=3.5.0
+seaborn>=0.11.0
+scikit-learn>=1.1.0
+Pillow>=9.0.0
+tqdm>=4.64.0
+opencv-python>=4.6.0
+scikit-image>=0.19.0
+pathlib2>=2.3.0  # For older Python versions
